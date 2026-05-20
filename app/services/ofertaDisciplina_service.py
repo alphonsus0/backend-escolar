@@ -2,25 +2,19 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.exceptions import (
-    BusinessRuleError,
-    ConflictError,
-    NotFoundError,
-)
-
-from app.models.aluno import Aluno
-from app.models.cursamento import Cursamento
-from app.models.matricula import Matricula
+from app.exceptions import BusinessRuleError, ConflictError, NotFoundError
+from app.models.disciplina import Disciplina
+from app.models.oferta_disciplina import OfertaDisciplina
+from app.models.professor import Professor
 from app.models.turma import Turma
-
-from app.schemas.matricula import (
-    MatriculaCreateSchema,
-    MatriculaUpdateSchema,
+from app.schemas.oferta_disciplina import (
+    OfertaDisciplinaCreateSchema,
+    OfertaDisciplinaUpdateSchema,
 )
 
 
-class MatriculaService:
-    """Operações de negócio da entidade MATRICULA."""
+class OfertaDisciplinaService:
+    """Operações de negócio da entidade OFERTADISCIPLINA."""
 
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -30,85 +24,73 @@ class MatriculaService:
         *,
         skip: int = 0,
         limit: int = 100,
-    ) -> list[Matricula]:
-
+    ) -> list[OfertaDisciplina]:
         if skip < 0:
-            raise BusinessRuleError(
-                "skip deve ser maior ou igual a zero"
-            )
+            raise BusinessRuleError("skip deve ser maior ou igual a zero")
 
         if limit < 1 or limit > 500:
-            raise BusinessRuleError(
-                "limit deve estar entre 1 e 500"
-            )
+            raise BusinessRuleError("limit deve estar entre 1 e 500")
 
         stmt = (
-            select(Matricula)
-            .order_by(Matricula.idMatricula)
+            select(OfertaDisciplina)
+            .order_by(OfertaDisciplina.idOfertaDisciplina)
             .offset(skip)
             .limit(limit)
         )
 
         return list(self.db.scalars(stmt).all())
 
-    def buscar_por_id(
-        self,
-        matricula_id: int,
-    ) -> Matricula:
+    def buscar_por_id(self, id_oferta: int) -> OfertaDisciplina:
+        oferta = self.db.get(OfertaDisciplina, id_oferta)
 
-        matricula = self.db.get(
-            Matricula,
-            matricula_id,
-        )
-
-        if matricula is None:
+        if oferta is None:
             raise NotFoundError(
-                f"Matrícula com idMatricula={matricula_id} não encontrada"
+                f"OfertaDisciplina com id={id_oferta} não encontrada"
             )
 
-        return matricula
+        return oferta
 
     def criar(
         self,
-        dados: MatriculaCreateSchema,
-    ) -> Matricula:
-
-        self._validar_id_disponivel(dados.idMatricula)
-        self._validar_aluno_existente(dados.pessoa_id)
+        dados: OfertaDisciplinaCreateSchema,
+    ) -> OfertaDisciplina:
+        self._validar_status(dados.statusOferta)
+        self._validar_disciplina_existente(dados.idDisciplina)
         self._validar_turma_existente(dados.idTurma)
-        self._validar_status(dados.statusMatricula)
+        self._validar_professor_existente(dados.pessoa_id)
 
-        matricula = Matricula(
-            idMatricula=dados.idMatricula,
+        oferta = OfertaDisciplina(
+            idOfertaDisciplina=dados.idOfertaDisciplina,
             anoLetivo=dados.anoLetivo,
             semestre=dados.semestre,
-            dataMatricula=dados.dataMatricula,
-            statusMatricula=dados.statusMatricula,
-            pessoa_id=dados.pessoa_id,
+            sala=dados.sala,
+            diaOferta=dados.diaOferta,
+            mediaAprovacao=dados.mediaAprovacao,
+            statusOferta=dados.statusOferta,
+            idDisciplina=dados.idDisciplina,
             idTurma=dados.idTurma,
+            pessoa_id=dados.pessoa_id,
         )
 
         try:
-            self.db.add(matricula)
+            self.db.add(oferta)
             self.db.commit()
-            self.db.refresh(matricula)
+            self.db.refresh(oferta)
 
         except IntegrityError as exc:
             self.db.rollback()
-
             raise ConflictError(
                 self._mensagem_integridade(exc)
             ) from exc
 
-        return matricula
+        return oferta
 
     def atualizar(
         self,
-        matricula_id: int,
-        dados: MatriculaUpdateSchema,
-    ) -> Matricula:
-
-        matricula = self.buscar_por_id(matricula_id)
+        id_oferta: int,
+        dados: OfertaDisciplinaUpdateSchema,
+    ) -> OfertaDisciplina:
+        oferta = self.buscar_por_id(id_oferta)
 
         payload = dados.model_dump(exclude_unset=True)
 
@@ -117,144 +99,80 @@ class MatriculaService:
                 "Nenhum campo informado para atualização"
             )
 
-        if "pessoa_id" in payload:
-            self._validar_aluno_existente(
-                payload["pessoa_id"]
-            )
+        if "statusOferta" in payload:
+            self._validar_status(payload["statusOferta"])
+
+        if "idDisciplina" in payload:
+            self._validar_disciplina_existente(payload["idDisciplina"])
 
         if "idTurma" in payload:
-            self._validar_turma_existente(
-                payload["idTurma"]
-            )
+            self._validar_turma_existente(payload["idTurma"])
 
-        if "statusMatricula" in payload:
-            self._validar_status(
-                payload["statusMatricula"]
-            )
+        if "pessoa_id" in payload:
+            self._validar_professor_existente(payload["pessoa_id"])
 
-        campos = (
-            "anoLetivo",
-            "semestre",
-            "dataMatricula",
-            "statusMatricula",
-            "pessoa_id",
-            "idTurma",
-        )
-
-        for campo in campos:
-            if campo in payload:
-                setattr(matricula, campo, payload[campo])
+        for campo, valor in payload.items():
+            setattr(oferta, campo, valor)
 
         try:
             self.db.commit()
-            self.db.refresh(matricula)
+            self.db.refresh(oferta)
 
         except IntegrityError as exc:
             self.db.rollback()
-
             raise ConflictError(
                 self._mensagem_integridade(exc)
             ) from exc
 
-        return matricula
+        return oferta
 
-    def remover(
-        self,
-        matricula_id: int,
-    ) -> None:
-
-        matricula = self.buscar_por_id(matricula_id)
-
-        self._validar_sem_cursamentos(
-            matricula.idMatricula
-        )
+    def remover(self, id_oferta: int) -> None:
+        oferta = self.buscar_por_id(id_oferta)
 
         try:
-            self.db.delete(matricula)
+            self.db.delete(oferta)
             self.db.commit()
 
         except IntegrityError as exc:
             self.db.rollback()
-
             raise ConflictError(
-                "Não é possível remover a matrícula: existem registros vinculados"
+                "Não é possível remover a oferta: existem registros vinculados"
             ) from exc
 
-    def _validar_id_disponivel(
-        self,
-        matricula_id: int,
-    ) -> None:
-
-        if self.db.get(Matricula, matricula_id) is not None:
-            raise ConflictError(
-                f"idMatricula={matricula_id} já está cadastrado"
-            )
-
-    def _validar_aluno_existente(
-        self,
-        pessoa_id: int,
-    ) -> None:
-
-        if self.db.get(Aluno, pessoa_id) is None:
+    def _validar_disciplina_existente(self, id_disciplina: int) -> None:
+        if self.db.get(Disciplina, id_disciplina) is None:
             raise NotFoundError(
-                f"Aluno com pessoa_id={pessoa_id} não encontrado"
+                f"Disciplina com id={id_disciplina} não encontrada"
             )
 
-    def _validar_turma_existente(
-        self,
-        turma_id: int,
-    ) -> None:
-
-        if self.db.get(Turma, turma_id) is None:
+    def _validar_turma_existente(self, id_turma: int) -> None:
+        if self.db.get(Turma, id_turma) is None:
             raise NotFoundError(
-                f"Turma com idTurma={turma_id} não encontrada"
+                f"Turma com id={id_turma} não encontrada"
             )
 
-    def _validar_status(
-        self,
-        status: str,
-    ) -> None:
+    def _validar_professor_existente(self, pessoa_id: int) -> None:
+        if self.db.get(Professor, pessoa_id) is None:
+            raise NotFoundError(
+                f"Professor com pessoa_id={pessoa_id} não encontrado"
+            )
 
+    def _validar_status(self, status: str) -> None:
         status_normalizado = status.strip()
 
         if not status_normalizado:
             raise BusinessRuleError(
-                "statusMatricula não pode ser vazio"
+                "statusOferta não pode ser vazio"
             )
 
         if len(status_normalizado) > 20:
             raise BusinessRuleError(
-                "statusMatricula deve ter no máximo 20 caracteres"
-            )
-
-    def _validar_sem_cursamentos(
-        self,
-        matricula_id: int,
-    ) -> None:
-
-        stmt = (
-            select(Cursamento.siMatricula)
-            .where(
-                Cursamento.siMatricula == matricula_id
-            )
-            .limit(1)
-        )
-
-        if self.db.scalars(stmt).first() is not None:
-            raise BusinessRuleError(
-                "Matrícula possui cursamentos vinculados"
+                "statusOferta deve ter no máximo 20 caracteres"
             )
 
     @staticmethod
-    def _mensagem_integridade(
-        exc: IntegrityError,
-    ) -> str:
-
-        mensagem = (
-            str(exc.orig)
-            if exc.orig
-            else str(exc)
-        )
+    def _mensagem_integridade(exc: IntegrityError) -> str:
+        mensagem = str(exc.orig) if exc.orig else str(exc)
 
         if "UNIQUE" in mensagem.upper():
             return "Violação de unicidade"
