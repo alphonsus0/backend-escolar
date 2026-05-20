@@ -4,6 +4,11 @@ from app.schemas.aluno import (
     AlunoUpdateSchema,
 )
 from app.schemas.pessoa import PessoaBaseSchema, PessoaResponseSchema
+from app.schemas.professor import (
+    ProfessorCreateSchema,
+    ProfessorResponseSchema,
+    ProfessorUpdateSchema,
+)
 
 __all__ = [
     "PessoaBaseSchema",
@@ -11,4 +16,7 @@ __all__ = [
     "AlunoCreateSchema",
     "AlunoUpdateSchema",
     "AlunoResponseSchema",
+    "ProfessorCreateSchema",
+    "ProfessorUpdateSchema",
+    "ProfessorResponseSchema",
 ]
