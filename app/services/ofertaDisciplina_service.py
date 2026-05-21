@@ -7,7 +7,7 @@ from app.models.disciplina import Disciplina
 from app.models.oferta_disciplina import OfertaDisciplina
 from app.models.professor import Professor
 from app.models.turma import Turma
-from app.schemas.oferta_disciplina import (
+from app.schemas.ofertaDisciplina import (
     OfertaDisciplinaCreateSchema,
     OfertaDisciplinaUpdateSchema,
 )
