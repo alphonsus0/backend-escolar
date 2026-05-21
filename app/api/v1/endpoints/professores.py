@@ -95,3 +95,4 @@ def remover_professor(
 ) -> Response:
     service.remover(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
