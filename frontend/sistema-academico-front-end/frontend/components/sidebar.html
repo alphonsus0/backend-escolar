@@ -1,0 +1,66 @@
+<!-- Sidebar Component -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>🎓 Sistema Acadêmico</h2>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="index.html" class="nav-item" data-page="dashboard">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Dashboard</span>
+        </a>
+        <a href="pages/alunos.html" class="nav-item" data-page="alunos">
+            <span class="nav-icon">👨‍🎓</span>
+            <span class="nav-text">Alunos</span>
+        </a>
+        <a href="pages/professores.html" class="nav-item" data-page="professores">
+            <span class="nav-icon">👨‍🏫</span>
+            <span class="nav-text">Professores</span>
+        </a>
+        <a href="pages/disciplinas.html" class="nav-item" data-page="disciplinas">
+            <span class="nav-icon">📚</span>
+            <span class="nav-text">Disciplinas</span>
+        </a>
+        <a href="pages/turmas.html" class="nav-item" data-page="turmas">
+            <span class="nav-icon">🏫</span>
+            <span class="nav-text">Turmas</span>
+        </a>
+        <a href="pages/matriculas.html" class="nav-item" data-page="matriculas">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">Matrículas</span>
+        </a>
+        <a href="pages/ofertas.html" class="nav-item" data-page="ofertas">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Ofertas</span>
+        </a>
+        <a href="pages/avaliacoes.html" class="nav-item" data-page="avaliacoes">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">Avaliações</span>
+        </a>
+        <a href="pages/cursamentos.html" class="nav-item" data-page="cursamentos">
+            <span class="nav-icon">📖</span>
+            <span class="nav-text">Cursamentos</span>
+        </a>
+        <a href="pages/notas.html" class="nav-item" data-page="notas">
+            <span class="nav-icon">💯</span>
+            <span class="nav-text">Notas</span>
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <button class="btn btn-logout" onclick="logout()">
+            <span class="nav-icon">🚪</span>
+            <span class="nav-text">Sair</span>
+        </button>
+    </div>
+</aside>
+
+<!--
+    USAGE:
+    Include this file using JavaScript or copy the content directly into your HTML.
+    
+    JavaScript include example:
+    fetch('components/sidebar.html')
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('sidebar-container').innerHTML = html;
+        });
+-->

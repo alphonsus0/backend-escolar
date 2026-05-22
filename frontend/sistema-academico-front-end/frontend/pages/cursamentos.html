@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursamentos - Sistema Acadêmico</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/tables.css">
+    <link rel="stylesheet" href="../css/forms.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 Sistema Acadêmico</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="../index.html" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="alunos.html" class="nav-item">
+                    <span class="nav-icon">👨‍🎓</span>
+                    <span class="nav-text">Alunos</span>
+                </a>
+                <a href="professores.html" class="nav-item">
+                    <span class="nav-icon">👨‍🏫</span>
+                    <span class="nav-text">Professores</span>
+                </a>
+                <a href="disciplinas.html" class="nav-item">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Disciplinas</span>
+                </a>
+                <a href="turmas.html" class="nav-item">
+                    <span class="nav-icon">🏫</span>
+                    <span class="nav-text">Turmas</span>
+                </a>
+                <a href="matriculas.html" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Matrículas</span>
+                </a>
+                <a href="ofertas.html" class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Ofertas</span>
+                </a>
+                <a href="avaliacoes.html" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Avaliações</span>
+                </a>
+                <a href="cursamentos.html" class="nav-item active">
+                    <span class="nav-icon">📖</span>
+                    <span class="nav-text">Cursamentos</span>
+                </a>
+                <a href="notas.html" class="nav-item">
+                    <span class="nav-icon">💯</span>
+                    <span class="nav-text">Notas</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-logout" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">Sair</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <button class="btn-menu" onclick="toggleSidebar()">☰</button>
+                <h1>Cursamentos</h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo"></span>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <div class="search-box">
+                        <input type="text" id="searchCursamentos" placeholder="Buscar cursamentos..." class="search-input">
+                    </div>
+                    <button class="btn btn-primary" onclick="abrirModalCursamento()">
+                        <span class="icon">+</span> Novo Cursamento
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="data-table" id="tableCursamentos">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Matrícula</th>
+                                <th>Oferta</th>
+                                <th>Status</th>
+                                <th>Frequência</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="loading-state">
+                                    <div class="spinner"></div>
+                                    <p>Carregando cursamentos...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="paginationCursamentos"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Cursamento -->
+    <div class="modal-overlay" id="modalCursamento">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalCursamentoTitle">Novo Cursamento</h3>
+                <button class="btn-close" onclick="closeModal('modalCursamento')">&times;</button>
+            </div>
+            <form id="formCursamento" class="modal-body">
+                <input type="hidden" id="cursamentoId">
+                
+                <div class="form-group">
+                    <label for="cursamentoMatricula">Matrícula *</label>
+                    <select id="cursamentoMatricula" required>
+                        <option value="">Selecione uma matrícula</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cursamentoOferta">Oferta *</label>
+                    <select id="cursamentoOferta" required>
+                        <option value="">Selecione uma oferta</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cursamentoStatus">Status</label>
+                    <select id="cursamentoStatus">
+                        <option value="">Selecione o status</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Aprovado">Aprovado</option>
+                        <option value="Reprovado">Reprovado</option>
+                        <option value="Trancado">Trancado</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cursamentoFrequencia">Frequência (%)</label>
+                    <input type="number" id="cursamentoFrequencia" min="0" max="100" step="0.1" placeholder="0 a 100">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalCursamento')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div class="modal-overlay" id="confirmDialog">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h3 id="confirmTitle">Confirmar</h3>
+                <button class="btn-close" onclick="closeModal('confirmDialog')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('confirmDialog')">Cancelar</button>
+                <button class="btn btn-danger" id="confirmBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/ui.js"></script>
+    <script src="../js/cursamentos.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "sistema-academico-frontend",
+  "version": "1.0.0",
+  "description": "Frontend do Sistema Acadêmico Escolar - HTML, CSS e JavaScript Vanilla",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

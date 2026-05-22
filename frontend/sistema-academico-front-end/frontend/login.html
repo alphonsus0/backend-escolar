@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Sistema Acadêmico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/css/global.css">
+  <link rel="stylesheet" href="/frontend/css/auth.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <h1>Sistema Acadêmico</h1>
+        <p>Acesse sua conta para continuar</p>
+      </div>
+      
+      <div class="auth-body">
+        <form id="login-form" class="auth-form">
+          <div id="login-error" class="auth-error hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <span id="error-message">Usuário ou senha inválidos</span>
+          </div>
+          
+          <div class="form-group">
+            <label for="username">Usuário</label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </span>
+              <input 
+                type="text" 
+                id="username" 
+                name="username" 
+                placeholder="Digite seu usuário"
+                required
+                autocomplete="username"
+              >
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <div class="input-wrapper">
+              <span class="input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+              <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                placeholder="Digite sua senha"
+                required
+                autocomplete="current-password"
+              >
+              <button type="button" class="password-toggle" id="toggle-password">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-open">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-closed hidden">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-login" id="btn-login">
+            Entrar
+          </button>
+        </form>
+      </div>
+      
+      <div class="auth-footer">
+        <p>Sistema Acadêmico Escolar &copy; 2024</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/frontend/js/api.js"></script>
+  <script src="/frontend/js/auth.js"></script>
+  <script src="/frontend/js/ui.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Redireciona se já estiver autenticado
+      if (window.auth.redirectIfAuthenticated()) return;
+      
+      const form = document.getElementById('login-form');
+      const errorDiv = document.getElementById('login-error');
+      const errorMessage = document.getElementById('error-message');
+      const btnLogin = document.getElementById('btn-login');
+      const togglePassword = document.getElementById('toggle-password');
+      const passwordInput = document.getElementById('password');
+      
+      // Toggle password visibility
+      togglePassword.addEventListener('click', () => {
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        togglePassword.querySelector('.eye-open').classList.toggle('hidden');
+        togglePassword.querySelector('.eye-closed').classList.toggle('hidden');
+      });
+      
+      // Form submit
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        
+        if (!username || !password) {
+          showError('Por favor, preencha todos os campos');
+          return;
+        }
+        
+        // Loading state
+        window.ui.Loading.button(btnLogin, true);
+        hideError();
+        
+        try {
+          const result = await window.auth.login(username, password);
+          
+          if (result.success) {
+            window.location.href = '/frontend/index.html';
+          } else {
+            showError(result.error || 'Usuário ou senha inválidos');
+          }
+        } catch (error) {
+          showError('Erro ao conectar com o servidor. Verifique se a API está online.');
+        } finally {
+          window.ui.Loading.button(btnLogin, false);
+        }
+      });
+      
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorDiv.classList.remove('hidden');
+      }
+      
+      function hideError() {
+        errorDiv.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
