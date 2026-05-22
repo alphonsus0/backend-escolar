@@ -8,7 +8,7 @@ from app.models.oferta_disciplina import OfertaDisciplina
 from app.models.pessoa import Pessoa
 from app.models.professor import Professor
 from app.schemas.professor import ProfessorCreateSchema, ProfessorUpdateSchema
-
+from app.core.security import get_password_hash
 
 class ProfessorService:
     """Operações de negócio da entidade PROFESSOR (PESSOA + PROFESSOR)."""
@@ -56,6 +56,7 @@ class ProfessorService:
             matriculaProf=dados.matriculaProf,
             prof_Formacao=dados.prof_Formacao,
             dataAdmissao=dados.dataAdmissao,
+            senha=get_password_hash(dados.senha),
             pessoa=pessoa,
         )
 
@@ -75,6 +76,9 @@ class ProfessorService:
         professor = self.buscar_por_id(pessoa_id)
         pessoa = professor.pessoa
         payload = dados.model_dump(exclude_unset=True)
+
+        if "senha" in payload:
+            professor.senha = get_password_hash(payload["senha"])
 
         if not payload:
             raise BusinessRuleError("Nenhum campo informado para atualização")
