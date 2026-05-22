@@ -24,7 +24,7 @@ class ProfessorCreateSchema(PessoaBaseSchema, ProfessorBaseSchema):
     """
 
     pessoa_id: int = Field(..., ge=1, description="Chave compartilhada PESSOA/PROFESSOR")
-
+    senha: str = Field(..., min_length=6, max_length=100)
 
 class ProfessorUpdateSchema(BaseModel):
     """Atualização parcial — PESSOA e/ou PROFESSOR."""
