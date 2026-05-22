@@ -23,7 +23,11 @@ class AlunoCreateSchema(PessoaBaseSchema, AlunoBaseSchema):
     """
 
     pessoa_id: int = Field(..., ge=1, description="Chave compartilhada PESSOA/ALUNO")
-
+    senha: str = Field(
+        ...,
+        min_length=6,
+        max_length=100
+    )
 
 class AlunoUpdateSchema(BaseModel):
     """Atualização parcial — PESSOA e/ou ALUNO."""
