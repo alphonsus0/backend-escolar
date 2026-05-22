@@ -41,6 +41,8 @@ class AlunoUpdateSchema(BaseModel):
     matriculaAluno: str | None = Field(default=None, min_length=1, max_length=20)
     statusAluno: str | None = Field(default=None, min_length=1, max_length=20)
 
+    senha: str | None = Field(default=None, min_length=6, max_length=100)
+    
     model_config = ConfigDict(extra="forbid")
 
 
