@@ -28,6 +28,10 @@ class Professor(Base):
     dataAdmissao: Mapped[date] = mapped_column(Date, nullable=False)
 
     pessoa: Mapped[Pessoa] = relationship(back_populates="professor")
+    senha: Mapped[str] = mapped_column(
+    String(255),
+    nullable=False
+    )
     ofertas_disciplina: Mapped[list[OfertaDisciplina]] = relationship(
         back_populates="professor",
     )
