@@ -39,6 +39,8 @@ class ProfessorUpdateSchema(BaseModel):
     prof_Formacao: str | None = Field(default=None, min_length=1, max_length=100)
     dataAdmissao: date | None = None
 
+    senha: str | None = Field(default=None, min_length=6, max_length=100)
+    
     model_config = ConfigDict(extra="forbid")
 
 
