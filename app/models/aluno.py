@@ -26,4 +26,5 @@ class Aluno(Base):
     statusAluno: Mapped[str] = mapped_column(String(20), nullable=False)
 
     pessoa: Mapped[Pessoa] = relationship(back_populates="aluno")
+    senha: Mapped[str] = mapped_column(String(255), nullable=False)
     matriculas: Mapped[list[Matricula]] = relationship(back_populates="aluno")

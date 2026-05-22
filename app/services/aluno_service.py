@@ -8,6 +8,7 @@ from app.models.matricula import Matricula
 from app.models.pessoa import Pessoa
 from app.models.professor import Professor
 from app.schemas.aluno import AlunoCreateSchema, AlunoUpdateSchema
+from app.core.security import get_password_hash
 
 class AlunoService:
     """Operações de negócio da entidade ALUNO (PESSOA + ALUNO)."""
@@ -55,6 +56,7 @@ class AlunoService:
             RAaluno=dados.RAaluno,
             matriculaAluno=dados.matriculaAluno,
             statusAluno=dados.statusAluno,
+            senha=get_password_hash(dados.senha),
             pessoa=pessoa,
         )
 
@@ -74,6 +76,9 @@ class AlunoService:
         aluno = self.buscar_por_id(pessoa_id)
         pessoa = aluno.pessoa
         payload = dados.model_dump(exclude_unset=True)
+
+        if "senha" in payload:
+            aluno.senha = get_password_hash(payload["senha"])
 
         if not payload:
             raise BusinessRuleError("Nenhum campo informado para atualização")
