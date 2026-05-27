@@ -22,7 +22,7 @@ class Aluno(Base):
         autoincrement=False,
     )
     RAaluno: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
-    matriculaAluno: Mapped[str] = mapped_column(String(20), nullable=False)
+    matriculaAluno: Mapped[str | None] = mapped_column(String(20), nullable=True)
     statusAluno: Mapped[str] = mapped_column(String(20), nullable=False)
 
     pessoa: Mapped[Pessoa] = relationship(back_populates="aluno")

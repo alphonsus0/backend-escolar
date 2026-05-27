@@ -15,9 +15,8 @@ class MatriculaBaseSchema(BaseModel):
 
 
 class MatriculaCreateSchema(MatriculaBaseSchema):
-    """Criação de matrícula."""
+    """Criação de matrícula. idMatricula é gerado pelo banco (IDENTITY)."""
 
-    idMatricula: int = Field(..., ge=1)
     pessoa_id: int = Field(..., ge=1)
     idTurma: int = Field(..., ge=1)
 

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class OfertaDisciplina(Base):
     __tablename__ = "OFERTADISCIPLINA"
 
-    idOfertaDisciplina: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    idOfertaDisciplina: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     anoLetivo: Mapped[int] = mapped_column(Integer, nullable=False)
     semestre: Mapped[int] = mapped_column(Integer, nullable=False)
     sala: Mapped[str] = mapped_column(String(10), nullable=False)

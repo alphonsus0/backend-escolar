@@ -27,11 +27,11 @@ async function loadDashboardStats() {
   try {
     // Carrega contagens de cada entidade
     const [alunos, professores, disciplinas, turmas, matriculas] = await Promise.all([
-      getData('alunos').catch(() => []),
-      getData('professores').catch(() => []),
-      getData('disciplinas').catch(() => []),
-      getData('turmas').catch(() => []),
-      getData('matriculas').catch(() => [])
+      window.api.getData('/alunos').catch(() => []),
+      window.api.getData('/professores').catch(() => []),
+      window.api.getData('/disciplinas').catch(() => []),
+      window.api.getData('/turmas').catch(() => []),
+      window.api.getData('/matriculas').catch(() => [])
     ]);
     
     const stats = [

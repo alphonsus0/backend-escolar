@@ -1,127 +1,223 @@
-/* ================================================== */
 /* AVALIACOES.JS - CRUD de Avaliações */
-/* ================================================== */
 
 const ENDPOINT = '/avaliacoes';
 let currentPage = 1;
-let itemsPerPage = 10;
+const itemsPerPage = 10;
 let allData = [];
 let filteredData = [];
 let editingId = null;
-let ofertas = [];
+
+let ofertasMap = {};       // idOfertaDisciplina -> oferta
+let disciplinasMap = {};   // idDisciplina -> disciplina
+let turmasMap = {};        // idTurma -> turma
+
+function toMap(arr, key) {
+  return Object.fromEntries((arr || []).map(x => [x[key], x]));
+}
+
+async function loadLookups() {
+  try {
+    const [ofertas, disciplinas, turmas] = await Promise.all([
+      window.api.getData('/ofertas?limit=500'),
+      window.api.getData('/disciplinas?limit=500'),
+      window.api.getData('/turmas?limit=500'),
+    ]);
+    ofertasMap     = toMap(ofertas, 'idOfertaDisciplina');
+    disciplinasMap = toMap(disciplinas, 'idDisciplina');
+    turmasMap      = toMap(turmas, 'idTurma');
+  } catch (e) { console.error('Erro ao carregar lookups:', e); }
+}
+
+function descOferta(idOferta) {
+  const o = ofertasMap[idOferta];
+  if (!o) return `#${idOferta}`;
+  const d = disciplinasMap[o.idDisciplina];
+  const t = turmasMap[o.idTurma];
+  const dn = d ? d.nomeDisciplina : `disc #${o.idDisciplina}`;
+  const tn = t ? t.nomeTurma : `turma #${o.idTurma}`;
+  return `${dn} — ${tn} (${o.anoLetivo}/${o.semestre})`;
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!window.auth.initAuth(true)) return;
-  window.ui.Sidebar.init();
-  window.auth.updateUserUI();
+  if (window.auth && !window.auth.initAuth(true)) return;
+  if (window.ui && window.ui.Sidebar) window.ui.Sidebar.init();
+  if (window.auth && window.auth.updateUserUI) window.auth.updateUserUI();
   setupEventListeners();
-  await Promise.all([loadData(), loadOfertas()]);
+  await loadData();
   setupLogout();
 });
-
-async function loadOfertas() {
-  try { ofertas = await window.api.getData('/ofertas') || []; populateSelect('field-oferta_id', ofertas, 'id'); } catch (e) { console.error(e); }
-}
-
-function populateSelect(selectId, data, labelField) {
-  const select = document.getElementById(selectId);
-  if (!select) return;
-  select.innerHTML = '<option value="">Selecione...</option>' + (Array.isArray(data) ? data : []).map(i => `<option value="${i.id}">Oferta ${i.id}</option>`).join('');
-}
 
 function setupEventListeners() {
   document.getElementById('btn-new').addEventListener('click', () => openModal());
   document.getElementById('form-entity').addEventListener('submit', handleSubmit);
-  document.querySelectorAll('[data-action="close-modal"]').forEach(btn => btn.addEventListener('click', closeModal));
+  document.querySelectorAll('[data-action="close-modal"]').forEach(b => b.addEventListener('click', closeModal));
   document.getElementById('search-input').addEventListener('input', handleSearch);
-  document.getElementById('modal-form').addEventListener('click', (e) => { if (e.target.classList.contains('modal-overlay')) closeModal(); });
+  document.getElementById('modal-form').addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) closeModal();
+  });
 }
 
 async function loadData() {
-  const tableBody = document.getElementById('table-body');
-  const tableCount = document.getElementById('table-count');
-  tableBody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding: 3rem;"><div class="spinner spinner-lg" style="margin: 0 auto;"></div></td></tr>`;
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:3rem"><div class="spinner spinner-lg" style="margin:0 auto"></div></td></tr>`;
   try {
-    allData = await window.api.getData(ENDPOINT) || [];
+    await loadLookups();
+    const r = await window.api.getData(ENDPOINT);
+    allData = Array.isArray(r) ? r : [];
     filteredData = [...allData];
-    tableCount.textContent = `${allData.length} registro(s)`;
+    document.getElementById('table-count').textContent = `${allData.length} registro(s)`;
     renderTable();
-  } catch (error) {
-    tableBody.innerHTML = `<tr><td colspan="6" class="text-center"><p style="color: var(--danger);">Erro ao carregar.</p></td></tr>`;
-    window.ui.Toast.error('Erro ao carregar dados');
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:3rem;color:var(--danger)">Erro ao carregar.</td></tr>`;
   }
 }
 
 function renderTable() {
-  const tableBody = document.getElementById('table-body');
-  const paginationContainer = document.getElementById('pagination-container');
-  if (filteredData.length === 0) { tableBody.innerHTML = `<tr><td colspan="6"><div class="table-empty"><h3>Nenhuma avaliação encontrada</h3></div></td></tr>`; paginationContainer.innerHTML = ''; return; }
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const pageData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  tableBody.innerHTML = pageData.map(item => `
+  const tbody = document.getElementById('table-body');
+  const pag = document.getElementById('pagination-container');
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="table-empty"><h3>Nenhuma avaliação encontrada</h3></div></td></tr>`;
+    pag.innerHTML = '';
+    return;
+  }
+  const total = Math.ceil(filteredData.length / itemsPerPage);
+  const start = (currentPage - 1) * itemsPerPage;
+  tbody.innerHTML = filteredData.slice(start, start + itemsPerPage).map(a => `
     <tr>
-      <td class="cell-id">${item.id || '-'}</td>
-      <td>${item.nome || item.descricao || '-'}</td>
-      <td>Oferta ${item.oferta_id || '-'}</td>
-      <td>${item.data ? window.ui.Formatters.date(item.data) : '-'}</td>
-      <td>${item.peso || '-'}</td>
-      <td><div class="cell-actions"><button class="btn-action edit" onclick="editItem(${item.id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-action delete" onclick="deleteItem(${item.id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></td>
-    </tr>
-  `).join('');
-  paginationContainer.innerHTML = window.ui.Pagination.create({ currentPage, totalPages, totalItems: filteredData.length, itemsPerPage });
-  paginationContainer.querySelectorAll('.pagination-btn').forEach(btn => { btn.addEventListener('click', () => { if (!btn.disabled) { currentPage = parseInt(btn.dataset.page); renderTable(); } }); });
+      <td class="cell-id">${a.idAvaliacao}</td>
+      <td class="cell-name">${a.nomeAvaliacao || '-'}</td>
+      <td>${a.tipoAvaliacao}</td>
+      <td>${formatDate(a.dataAvaliacao)}</td>
+      <td>${a.peso}</td>
+      <td>${descOferta(a.idOfertaDisciplina)}</td>
+      <td>
+        <div class="cell-actions">
+          <button class="btn-action edit" onclick="editItem(${a.idAvaliacao})">✎</button>
+          <button class="btn-action delete" onclick="deleteItem(${a.idAvaliacao})">🗑</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  if (window.ui && window.ui.Pagination) {
+    pag.innerHTML = window.ui.Pagination.create({ currentPage, totalPages: total, totalItems: filteredData.length, itemsPerPage });
+    pag.querySelectorAll('.pagination-btn').forEach(b => b.addEventListener('click', () => {
+      if (!b.disabled) { currentPage = parseInt(b.dataset.page); renderTable(); }
+    }));
+  }
+}
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return isNaN(d) ? iso : d.toLocaleDateString('pt-BR');
 }
 
 function handleSearch(e) {
-  const term = e.target.value.toLowerCase();
-  filteredData = allData.filter(i => (i.nome && i.nome.toLowerCase().includes(term)) || (i.descricao && i.descricao.toLowerCase().includes(term)));
-  currentPage = 1; renderTable();
+  const q = e.target.value.toLowerCase();
+  filteredData = allData.filter(a =>
+    (a.nomeAvaliacao && a.nomeAvaliacao.toLowerCase().includes(q)) ||
+    (a.tipoAvaliacao && a.tipoAvaliacao.toLowerCase().includes(q)) ||
+    String(a.idAvaliacao).includes(q)
+  );
+  currentPage = 1;
+  renderTable();
 }
 
-function openModal(data = null) {
-  editingId = data ? data.id : null;
+async function loadOfertaSelect() {
+  await loadLookups();
+  const sel = document.getElementById('field-idOfertaDisciplina');
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    Object.values(ofertasMap).map(o => `<option value="${o.idOfertaDisciplina}">${descOferta(o.idOfertaDisciplina)}</option>`).join('');
+}
+
+async function openModal(data = null) {
+  editingId = data ? data.idAvaliacao : null;
   document.getElementById('modal-title').textContent = data ? 'Editar Avaliação' : 'Nova Avaliação';
   document.getElementById('form-entity').reset();
+  await loadOfertaSelect();
+
+  const ofertaF = document.getElementById('field-idOfertaDisciplina');
+  ofertaF.disabled = !!data;
+
   if (data) {
-    document.getElementById('field-nome').value = data.nome || '';
-    document.getElementById('field-descricao').value = data.descricao || '';
-    document.getElementById('field-oferta_id').value = data.oferta_id || '';
-    document.getElementById('field-data').value = data.data || '';
-    document.getElementById('field-peso').value = data.peso || '';
+    document.getElementById('field-peso').value               = data.peso;
+    document.getElementById('field-nomeAvaliacao').value      = data.nomeAvaliacao;
+    document.getElementById('field-dataAvaliacao').value      = data.dataAvaliacao;
+    document.getElementById('field-tipoAvaliacao').value      = data.tipoAvaliacao;
+    document.getElementById('field-descAvaliacao').value      = data.descAvaliacao || '';
+    document.getElementById('field-idOfertaDisciplina').value = data.idOfertaDisciplina;
   }
   document.getElementById('modal-form').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
-function closeModal() { document.getElementById('modal-form').classList.remove('active'); document.body.style.overflow = ''; editingId = null; }
+function closeModal() {
+  document.getElementById('modal-form').classList.remove('active');
+  document.body.style.overflow = '';
+  editingId = null;
+}
 
 async function handleSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById('btn-submit');
-  window.ui.Loading.button(btn, true);
-  const formData = {
-    nome: document.getElementById('field-nome').value.trim(),
-    descricao: document.getElementById('field-descricao').value.trim() || null,
-    oferta_id: parseInt(document.getElementById('field-oferta_id').value) || null,
-    data: document.getElementById('field-data').value || null,
-    peso: parseFloat(document.getElementById('field-peso').value) || null
+  if (window.ui && window.ui.Loading) window.ui.Loading.button(btn, true);
+
+  const base = {
+    peso:          parseFloat(document.getElementById('field-peso').value),
+    nomeAvaliacao: document.getElementById('field-nomeAvaliacao').value.trim(),
+    dataAvaliacao: document.getElementById('field-dataAvaliacao').value,
+    tipoAvaliacao: document.getElementById('field-tipoAvaliacao').value,
+    descAvaliacao: document.getElementById('field-descAvaliacao').value.trim() || null,
   };
+
   try {
-    if (editingId) { await window.api.putData(`${ENDPOINT}/${editingId}`, formData); window.ui.Toast.success('Avaliação atualizada!'); }
-    else { await window.api.postData(ENDPOINT, formData); window.ui.Toast.success('Avaliação cadastrada!'); }
-    closeModal(); await loadData();
-  } catch (error) { window.ui.Toast.error(error.message || 'Erro ao salvar'); }
-  finally { window.ui.Loading.button(btn, false); }
+    if (editingId) {
+      await window.api.putData(`${ENDPOINT}/${editingId}`, base);
+      window.ui && window.ui.Toast && window.ui.Toast.success('Avaliação atualizada!');
+    } else {
+      const payload = {
+        idOfertaDisciplina: parseInt(document.getElementById('field-idOfertaDisciplina').value, 10),
+        ...base,
+      };
+      await window.api.postData(ENDPOINT, payload);
+      window.ui && window.ui.Toast && window.ui.Toast.success('Avaliação cadastrada!');
+    }
+    closeModal();
+    await loadData();
+  } catch (err) {
+    console.error(err);
+    window.ui && window.ui.Toast && window.ui.Toast.error(err.message || 'Erro ao salvar');
+  } finally {
+    if (window.ui && window.ui.Loading) window.ui.Loading.button(btn, false);
+  }
 }
 
-async function editItem(id) { try { openModal(await window.api.getData(`${ENDPOINT}/${id}`)); } catch (e) { window.ui.Toast.error('Erro ao carregar'); } }
+async function editItem(id) {
+  try { openModal(await window.api.getData(`${ENDPOINT}/${id}`)); }
+  catch (e) { console.error(e); window.ui && window.ui.Toast && window.ui.Toast.error('Erro ao carregar'); }
+}
+
 function deleteItem(id) {
-  window.ui.Modal.confirm({ title: 'Excluir Avaliação', message: 'Confirma exclusão?', type: 'danger', confirmText: 'Excluir',
-    onConfirm: async () => { try { await window.api.deleteData(`${ENDPOINT}/${id}`); window.ui.Toast.success('Excluída!'); await loadData(); } catch (e) { window.ui.Toast.error(e.message); } }
-  });
+  if (window.ui && window.ui.Modal) {
+    window.ui.Modal.confirm({ title:'Excluir Avaliação', message:'Confirma exclusão?', type:'danger', confirmText:'Excluir', onConfirm:()=>doDelete(id) });
+  } else if (confirm('Excluir?')) doDelete(id);
 }
 
-function setupLogout() { document.querySelectorAll('.btn-logout, [data-action="logout"]').forEach(btn => { btn.addEventListener('click', (e) => { e.preventDefault(); window.ui.Modal.confirm({ title: 'Sair', message: 'Deseja sair?', type: 'warning', confirmText: 'Sair', onConfirm: () => window.auth.logout() }); }); }); }
+async function doDelete(id) {
+  try {
+    await window.api.deleteData(`${ENDPOINT}/${id}`);
+    window.ui && window.ui.Toast && window.ui.Toast.success('Excluído!');
+    await loadData();
+  } catch (e) {
+    console.error(e);
+    window.ui && window.ui.Toast && window.ui.Toast.error(e.message || 'Erro ao excluir');
+  }
+}
+
+function setupLogout() {
+  document.querySelectorAll('.btn-logout, [data-action="logout"]').forEach(b =>
+    b.addEventListener('click', e => { e.preventDefault(); window.auth && window.auth.logout && window.auth.logout(); }));
+}
 
 window.editItem = editItem;
 window.deleteItem = deleteItem;

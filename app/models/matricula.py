@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class Matricula(Base):
     __tablename__ = "MATRICULA"
 
-    idMatricula: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    idMatricula: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     anoLetivo: Mapped[int] = mapped_column(Integer, nullable=False)
     semestre: Mapped[int] = mapped_column(Integer, nullable=False)
     dataMatricula: Mapped[date] = mapped_column(Date, nullable=False)

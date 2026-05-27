@@ -22,9 +22,7 @@ class OfertaDisciplinaBaseSchema(BaseModel):
 
 
 class OfertaDisciplinaCreateSchema(OfertaDisciplinaBaseSchema):
-    """Criação de OFERTADISCIPLINA."""
-
-    idOfertaDisciplina: int = Field(..., ge=1)
+    """Criação de OFERTADISCIPLINA. idOfertaDisciplina é gerado pelo banco (IDENTITY)."""
 
 
 class OfertaDisciplinaUpdateSchema(BaseModel):

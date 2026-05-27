@@ -1,0 +1,66 @@
+services:
+  sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sistema-academico-sqlserver:latest
+    container_name: sistema-academico-db
+    hostname: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-SenhaForte!123}"
+      MSSQL_TCP_PORT: "1433"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./init:/usr/src/init:ro
+      - ../docs:/usr/src/docs:ro
+    healthcheck:
+      test: >
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa
+        -P "$$MSSQL_SA_PASSWORD" -C -d SistemaAcademico -Q "SELECT 1" -b -t 5
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    image: sistema-academico-backend:latest
+    container_name: sistema-academico-api
+    environment:
+      DATABASE_URL: "mssql+pyodbc://sa:${MSSQL_SA_PASSWORD:-SenhaForte!123}@sqlserver:1433/SistemaAcademico?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+      SECRET_KEY: "${SECRET_KEY:-altere-em-producao}"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      API_V1_PREFIX: "/api/v1"
+      PROJECT_NAME: "Sistema Acadêmico Escolar"
+      DEBUG: "true"
+      CORS_ORIGINS: "http://localhost,http://localhost:8080,http://localhost:3000,http://localhost:5500,http://127.0.0.1:5500,http://127.0.0.1:8080"
+    ports:
+      - "8000:8000"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    image: sistema-academico-frontend:latest
+    container_name: sistema-academico-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mssql_data:
+    name: sistema-academico-mssql-data

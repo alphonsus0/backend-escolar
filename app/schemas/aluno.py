@@ -8,41 +8,40 @@ from app.schemas.pessoa import PessoaBaseSchema, PessoaResponseSchema
 
 
 class AlunoBaseSchema(BaseModel):
-    """Dados específicos da tabela ALUNO."""
+    """Dados específicos da tabela ALUNO (resposta)."""
 
     RAaluno: int = Field(..., ge=1)
-    matriculaAluno: str = Field(..., min_length=1, max_length=20)
+    matriculaAluno: str | None = Field(default=None, max_length=20)
     statusAluno: str = Field(..., min_length=1, max_length=20)
 
 
-class AlunoCreateSchema(PessoaBaseSchema, AlunoBaseSchema):
+class AlunoCreateSchema(PessoaBaseSchema):
     """
-    Criação de aluno: registros em PESSOA + ALUNO (mesmo pessoa_id).
+    Criação de aluno: registros em PESSOA + ALUNO.
 
-    Não inclui campos de autenticação (senha, hash, token).
+    pessoa_id, RAaluno e matriculaAluno são gerados pelo banco
+    (IDENTITY / SEQUENCE / trigger) — não devem ser informados.
     """
 
-    pessoa_id: int = Field(..., ge=1, description="Chave compartilhada PESSOA/ALUNO")
-    senha: str = Field(
-        ...,
-        min_length=6,
-        max_length=100
-    )
+    statusAluno: str = Field(..., min_length=1, max_length=20)
+    senha: str = Field(..., min_length=6, max_length=100)
+
 
 class AlunoUpdateSchema(BaseModel):
-    """Atualização parcial — PESSOA e/ou ALUNO."""
+    """Atualização parcial — PESSOA e/ou ALUNO.
+
+    RAaluno e matriculaAluno são imutáveis (gerados pelo banco).
+    """
 
     nome: str | None = Field(default=None, min_length=1, max_length=100)
     cpf: str | None = Field(default=None, min_length=11, max_length=14)
     dataNascimento: date | None = None
     endereco: str | None = Field(default=None, min_length=1, max_length=255)
     telefone: str | None = Field(default=None, min_length=1, max_length=15)
-    RAaluno: int | None = Field(default=None, ge=1)
-    matriculaAluno: str | None = Field(default=None, min_length=1, max_length=20)
     statusAluno: str | None = Field(default=None, min_length=1, max_length=20)
 
     senha: str | None = Field(default=None, min_length=6, max_length=100)
-    
+
     model_config = ConfigDict(extra="forbid")
 
 

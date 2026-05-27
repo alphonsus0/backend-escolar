@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class Disciplina(Base):
     __tablename__ = "DISCIPLINA"
 
-    idDisciplina: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    idDisciplina: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     nomeDisciplina: Mapped[str] = mapped_column(String(100), nullable=False)
     cargaHoraria: Mapped[int] = mapped_column(Integer, nullable=False)
     statusDisciplina: Mapped[str] = mapped_column(String(20), nullable=False)

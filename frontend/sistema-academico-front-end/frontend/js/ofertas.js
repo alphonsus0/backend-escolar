@@ -1,139 +1,223 @@
-/* ================================================== */
-/* OFERTAS.JS - CRUD de Ofertas */
-/* ================================================== */
+/* OFERTAS.JS - CRUD de Ofertas de Disciplina */
 
 const ENDPOINT = '/ofertas';
 let currentPage = 1;
-let itemsPerPage = 10;
+const itemsPerPage = 10;
 let allData = [];
 let filteredData = [];
 let editingId = null;
-let disciplinas = [];
-let turmas = [];
-let professores = [];
+
+let disciplinasMap = {}, turmasMap = {}, profsMap = {};
+
+function toMap(arr, key) {
+  return Object.fromEntries((arr || []).map(x => [x[key], x]));
+}
+
+async function loadLookups() {
+  try {
+    const [disc, turmas, profs] = await Promise.all([
+      window.api.getData('/disciplinas?limit=500'),
+      window.api.getData('/turmas?limit=500'),
+      window.api.getData('/professores?limit=500'),
+    ]);
+    disciplinasMap = toMap(disc, 'idDisciplina');
+    turmasMap      = toMap(turmas, 'idTurma');
+    profsMap       = toMap(profs, 'pessoa_id');
+  } catch (e) { console.error('Erro ao carregar lookups:', e); }
+}
+
+function nomeDisc(id) { const d = disciplinasMap[id]; return d ? d.nomeDisciplina : `#${id}`; }
+function nomeTurma(id) { const t = turmasMap[id]; return t ? t.nomeTurma : `#${id}`; }
+function nomeProf(pid) { const p = profsMap[pid]; return p ? p.nome : `#${pid}`; }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!window.auth.initAuth(true)) return;
-  window.ui.Sidebar.init();
-  window.auth.updateUserUI();
+  if (window.auth && !window.auth.initAuth(true)) return;
+  if (window.ui && window.ui.Sidebar) window.ui.Sidebar.init();
+  if (window.auth && window.auth.updateUserUI) window.auth.updateUserUI();
   setupEventListeners();
-  await Promise.all([loadData(), loadDisciplinas(), loadTurmas(), loadProfessores()]);
+  await loadData();
   setupLogout();
 });
-
-async function loadDisciplinas() {
-  try { disciplinas = await window.api.getData('/disciplinas') || []; populateSelect('field-disciplina_id', disciplinas, 'nome'); } catch (e) { console.error(e); }
-}
-async function loadTurmas() {
-  try { turmas = await window.api.getData('/turmas') || []; populateSelect('field-turma_id', turmas, 'nome'); } catch (e) { console.error(e); }
-}
-async function loadProfessores() {
-  try { professores = await window.api.getData('/professores') || []; populateSelect('field-professor_id', professores, 'nome'); } catch (e) { console.error(e); }
-}
-
-function populateSelect(selectId, data, labelField) {
-  const select = document.getElementById(selectId);
-  if (!select) return;
-  const val = select.value;
-  select.innerHTML = '<option value="">Selecione...</option>' + (Array.isArray(data) ? data : []).map(i => `<option value="${i.id}">${i[labelField] || i.id}</option>`).join('');
-  if (val) select.value = val;
-}
 
 function setupEventListeners() {
   document.getElementById('btn-new').addEventListener('click', () => openModal());
   document.getElementById('form-entity').addEventListener('submit', handleSubmit);
-  document.querySelectorAll('[data-action="close-modal"]').forEach(btn => btn.addEventListener('click', closeModal));
+  document.querySelectorAll('[data-action="close-modal"]').forEach(b => b.addEventListener('click', closeModal));
   document.getElementById('search-input').addEventListener('input', handleSearch);
-  document.getElementById('modal-form').addEventListener('click', (e) => { if (e.target.classList.contains('modal-overlay')) closeModal(); });
+  document.getElementById('modal-form').addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) closeModal();
+  });
 }
 
 async function loadData() {
-  const tableBody = document.getElementById('table-body');
-  const tableCount = document.getElementById('table-count');
-  tableBody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding: 3rem;"><div class="spinner spinner-lg" style="margin: 0 auto;"></div></td></tr>`;
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:3rem"><div class="spinner spinner-lg" style="margin:0 auto"></div></td></tr>`;
   try {
-    allData = await window.api.getData(ENDPOINT) || [];
+    await loadLookups();
+    const r = await window.api.getData(ENDPOINT);
+    allData = Array.isArray(r) ? r : [];
     filteredData = [...allData];
-    tableCount.textContent = `${allData.length} registro(s)`;
+    document.getElementById('table-count').textContent = `${allData.length} registro(s)`;
     renderTable();
-  } catch (error) {
-    tableBody.innerHTML = `<tr><td colspan="6" class="text-center"><p style="color: var(--danger);">Erro ao carregar.</p></td></tr>`;
-    window.ui.Toast.error('Erro ao carregar dados');
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:3rem;color:var(--danger)">Erro ao carregar.</td></tr>`;
   }
 }
 
-function getName(list, id, field = 'nome') { const item = list.find(i => i.id === id); return item ? item[field] : id; }
-
 function renderTable() {
-  const tableBody = document.getElementById('table-body');
-  const paginationContainer = document.getElementById('pagination-container');
-  if (filteredData.length === 0) { tableBody.innerHTML = `<tr><td colspan="6"><div class="table-empty"><h3>Nenhuma oferta encontrada</h3></div></td></tr>`; paginationContainer.innerHTML = ''; return; }
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const pageData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  tableBody.innerHTML = pageData.map(item => `
+  const tbody = document.getElementById('table-body');
+  const pag = document.getElementById('pagination-container');
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="table-empty"><h3>Nenhuma oferta encontrada</h3></div></td></tr>`;
+    pag.innerHTML = '';
+    return;
+  }
+  const total = Math.ceil(filteredData.length / itemsPerPage);
+  const start = (currentPage - 1) * itemsPerPage;
+  tbody.innerHTML = filteredData.slice(start, start + itemsPerPage).map(o => `
     <tr>
-      <td class="cell-id">${item.id || '-'}</td>
-      <td>${getName(disciplinas, item.disciplina_id)}</td>
-      <td>${getName(turmas, item.turma_id)}</td>
-      <td>${getName(professores, item.professor_id)}</td>
-      <td>${item.semestre || '-'}</td>
-      <td><div class="cell-actions"><button class="btn-action edit" onclick="editItem(${item.id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-action delete" onclick="deleteItem(${item.id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div></td>
-    </tr>
-  `).join('');
-  paginationContainer.innerHTML = window.ui.Pagination.create({ currentPage, totalPages, totalItems: filteredData.length, itemsPerPage });
-  paginationContainer.querySelectorAll('.pagination-btn').forEach(btn => { btn.addEventListener('click', () => { if (!btn.disabled) { currentPage = parseInt(btn.dataset.page); renderTable(); } }); });
+      <td class="cell-id">${o.idOfertaDisciplina}</td>
+      <td>${nomeDisc(o.idDisciplina)}</td>
+      <td>${nomeTurma(o.idTurma)}</td>
+      <td>${nomeProf(o.pessoa_id)}</td>
+      <td>${o.anoLetivo}/${o.semestre}</td>
+      <td>${o.sala}</td>
+      <td>${o.diaOferta}</td>
+      <td><span class="badge">${o.statusOferta}</span></td>
+      <td>
+        <div class="cell-actions">
+          <button class="btn-action edit" onclick="editItem(${o.idOfertaDisciplina})">✎</button>
+          <button class="btn-action delete" onclick="deleteItem(${o.idOfertaDisciplina})">🗑</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  if (window.ui && window.ui.Pagination) {
+    pag.innerHTML = window.ui.Pagination.create({ currentPage, totalPages: total, totalItems: filteredData.length, itemsPerPage });
+    pag.querySelectorAll('.pagination-btn').forEach(b => b.addEventListener('click', () => {
+      if (!b.disabled) { currentPage = parseInt(b.dataset.page); renderTable(); }
+    }));
+  }
 }
 
 function handleSearch(e) {
-  const term = e.target.value.toLowerCase();
-  filteredData = allData.filter(i => getName(disciplinas, i.disciplina_id).toLowerCase().includes(term) || getName(turmas, i.turma_id).toLowerCase().includes(term));
-  currentPage = 1; renderTable();
+  const q = e.target.value.toLowerCase();
+  filteredData = allData.filter(o =>
+    nomeDisc(o.idDisciplina).toLowerCase().includes(q) ||
+    nomeTurma(o.idTurma).toLowerCase().includes(q) ||
+    nomeProf(o.pessoa_id).toLowerCase().includes(q) ||
+    (o.statusOferta && o.statusOferta.toLowerCase().includes(q))
+  );
+  currentPage = 1;
+  renderTable();
 }
 
-function openModal(data = null) {
-  editingId = data ? data.id : null;
+async function loadSelects() {
+  await loadLookups();
+  const discSel = document.getElementById('field-idDisciplina');
+  discSel.innerHTML = '<option value="">Selecione...</option>' +
+    Object.values(disciplinasMap).map(d => `<option value="${d.idDisciplina}">${d.nomeDisciplina} (${d.cargaHoraria}h)</option>`).join('');
+  const tuSel = document.getElementById('field-idTurma');
+  tuSel.innerHTML = '<option value="">Selecione...</option>' +
+    Object.values(turmasMap).map(t => `<option value="${t.idTurma}">${t.nomeTurma} — ${t.turno} (${t.anoLetivo})</option>`).join('');
+  const prSel = document.getElementById('field-pessoa_id');
+  prSel.innerHTML = '<option value="">Selecione...</option>' +
+    Object.values(profsMap).map(p => `<option value="${p.pessoa_id}">${p.nome} (${p.matriculaProf || 'matr. pendente'})</option>`).join('');
+}
+
+async function openModal(data = null) {
+  editingId = data ? data.idOfertaDisciplina : null;
   document.getElementById('modal-title').textContent = data ? 'Editar Oferta' : 'Nova Oferta';
   document.getElementById('form-entity').reset();
+  await loadSelects();
+
   if (data) {
-    document.getElementById('field-disciplina_id').value = data.disciplina_id || '';
-    document.getElementById('field-turma_id').value = data.turma_id || '';
-    document.getElementById('field-professor_id').value = data.professor_id || '';
-    document.getElementById('field-semestre').value = data.semestre || '';
-    document.getElementById('field-ano').value = data.ano || '';
+    document.getElementById('field-anoLetivo').value      = data.anoLetivo;
+    document.getElementById('field-semestre').value       = data.semestre;
+    document.getElementById('field-sala').value           = data.sala;
+    document.getElementById('field-diaOferta').value      = data.diaOferta;
+    document.getElementById('field-mediaAprovacao').value = data.mediaAprovacao;
+    document.getElementById('field-statusOferta').value   = data.statusOferta;
+    document.getElementById('field-idDisciplina').value   = data.idDisciplina;
+    document.getElementById('field-idTurma').value        = data.idTurma;
+    document.getElementById('field-pessoa_id').value      = data.pessoa_id;
+  } else {
+    document.getElementById('field-anoLetivo').value      = new Date().getFullYear();
+    document.getElementById('field-semestre').value       = 1;
+    document.getElementById('field-mediaAprovacao').value = 6;
+    document.getElementById('field-statusOferta').value   = 'ATIVA';
   }
   document.getElementById('modal-form').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
-function closeModal() { document.getElementById('modal-form').classList.remove('active'); document.body.style.overflow = ''; editingId = null; }
+function closeModal() {
+  document.getElementById('modal-form').classList.remove('active');
+  document.body.style.overflow = '';
+  editingId = null;
+}
 
 async function handleSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById('btn-submit');
-  window.ui.Loading.button(btn, true);
-  const formData = {
-    disciplina_id: parseInt(document.getElementById('field-disciplina_id').value),
-    turma_id: parseInt(document.getElementById('field-turma_id').value),
-    professor_id: parseInt(document.getElementById('field-professor_id').value) || null,
-    semestre: document.getElementById('field-semestre').value.trim() || null,
-    ano: parseInt(document.getElementById('field-ano').value) || null
+  if (window.ui && window.ui.Loading) window.ui.Loading.button(btn, true);
+
+  const base = {
+    anoLetivo:      parseInt(document.getElementById('field-anoLetivo').value, 10),
+    semestre:       parseInt(document.getElementById('field-semestre').value, 10),
+    sala:           document.getElementById('field-sala').value.trim(),
+    diaOferta:      document.getElementById('field-diaOferta').value.trim(),
+    mediaAprovacao: parseFloat(document.getElementById('field-mediaAprovacao').value),
+    statusOferta:   document.getElementById('field-statusOferta').value,
+    idDisciplina:   parseInt(document.getElementById('field-idDisciplina').value, 10),
+    idTurma:        parseInt(document.getElementById('field-idTurma').value, 10),
+    pessoa_id:      parseInt(document.getElementById('field-pessoa_id').value, 10),
   };
+
   try {
-    if (editingId) { await window.api.putData(`${ENDPOINT}/${editingId}`, formData); window.ui.Toast.success('Oferta atualizada!'); }
-    else { await window.api.postData(ENDPOINT, formData); window.ui.Toast.success('Oferta cadastrada!'); }
-    closeModal(); await loadData();
-  } catch (error) { window.ui.Toast.error(error.message || 'Erro ao salvar'); }
-  finally { window.ui.Loading.button(btn, false); }
+    if (editingId) {
+      await window.api.putData(`${ENDPOINT}/${editingId}`, base);
+      window.ui && window.ui.Toast && window.ui.Toast.success('Oferta atualizada!');
+    } else {
+      await window.api.postData(ENDPOINT, base);
+      window.ui && window.ui.Toast && window.ui.Toast.success('Oferta cadastrada!');
+    }
+    closeModal();
+    await loadData();
+  } catch (err) {
+    console.error(err);
+    window.ui && window.ui.Toast && window.ui.Toast.error(err.message || 'Erro ao salvar');
+  } finally {
+    if (window.ui && window.ui.Loading) window.ui.Loading.button(btn, false);
+  }
 }
 
-async function editItem(id) { try { openModal(await window.api.getData(`${ENDPOINT}/${id}`)); } catch (e) { window.ui.Toast.error('Erro ao carregar'); } }
+async function editItem(id) {
+  try { openModal(await window.api.getData(`${ENDPOINT}/${id}`)); }
+  catch (e) { console.error(e); window.ui && window.ui.Toast && window.ui.Toast.error('Erro ao carregar'); }
+}
+
 function deleteItem(id) {
-  window.ui.Modal.confirm({ title: 'Excluir Oferta', message: 'Confirma exclusão?', type: 'danger', confirmText: 'Excluir',
-    onConfirm: async () => { try { await window.api.deleteData(`${ENDPOINT}/${id}`); window.ui.Toast.success('Excluída!'); await loadData(); } catch (e) { window.ui.Toast.error(e.message); } }
-  });
+  if (window.ui && window.ui.Modal) {
+    window.ui.Modal.confirm({ title:'Excluir Oferta', message:'Confirma exclusão?', type:'danger', confirmText:'Excluir', onConfirm:()=>doDelete(id) });
+  } else if (confirm('Excluir?')) doDelete(id);
 }
 
-function setupLogout() { document.querySelectorAll('.btn-logout, [data-action="logout"]').forEach(btn => { btn.addEventListener('click', (e) => { e.preventDefault(); window.ui.Modal.confirm({ title: 'Sair', message: 'Deseja sair?', type: 'warning', confirmText: 'Sair', onConfirm: () => window.auth.logout() }); }); }); }
+async function doDelete(id) {
+  try {
+    await window.api.deleteData(`${ENDPOINT}/${id}`);
+    window.ui && window.ui.Toast && window.ui.Toast.success('Excluído!');
+    await loadData();
+  } catch (e) {
+    console.error(e);
+    window.ui && window.ui.Toast && window.ui.Toast.error(e.message || 'Erro ao excluir');
+  }
+}
+
+function setupLogout() {
+  document.querySelectorAll('.btn-logout, [data-action="logout"]').forEach(b =>
+    b.addEventListener('click', e => { e.preventDefault(); window.auth && window.auth.logout && window.auth.logout(); }));
+}
 
 window.editItem = editItem;
 window.deleteItem = deleteItem;

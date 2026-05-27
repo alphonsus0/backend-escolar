@@ -36,7 +36,7 @@ def listar_cursamentos(
     limit: int = Query(100, ge=1, le=500),
 ):
 
-    return service.listar(skip, limit)
+    return service.listar(skip=skip, limit=limit)
 
 
 @router.get(
@@ -49,10 +49,21 @@ def buscar_cursamento(
     service: CursamentoServiceDep = None,
 ):
 
-    return service.buscar_por_id(
-        siMatricula,
-        idOfertaDisciplina,
-    )
+    return service.buscar(siMatricula, idOfertaDisciplina)
+
+
+@router.post(
+    "/{siMatricula}/{idOfertaDisciplina}/recalcular-media",
+    response_model=CursamentoResponseSchema,
+    summary="Recalcular média do cursamento",
+    description="Executa sp_CalcularMediaFinalAluno para o cursamento informado.",
+)
+def recalcular_media_cursamento(
+    service: CursamentoServiceDep,
+    siMatricula: int = Path(..., ge=1),
+    idOfertaDisciplina: int = Path(..., ge=1),
+):
+    return service.recalcular_media(siMatricula, idOfertaDisciplina)
 
 
 @router.post(

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class Pessoa(Base):
     __tablename__ = "PESSOA"
 
-    pessoa_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    pessoa_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     cpf: Mapped[str] = mapped_column(String(14), nullable=False, unique=True)
     dataNascimento: Mapped[date] = mapped_column(Date, nullable=False)

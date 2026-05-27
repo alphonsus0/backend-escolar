@@ -8,23 +8,24 @@ from app.schemas.common import ORM_MODEL_CONFIG
 class CursamentoBaseSchema(BaseModel):
     """Dados da tabela CURSAMENTO."""
 
-    mediaFinal: Decimal = Field(..., ge=0, le=10)
-    faltas: int = Field(..., ge=0)
-    situacaoFinal: str = Field(..., min_length=1, max_length=20)
+    mediaFinal: Decimal | None = Field(default=None, ge=0, le=10)
+    faltas: int = Field(default=0, ge=0)
+    situacaoFinal: str = Field(default="EM_CURSO", min_length=1, max_length=20)
     obs: str | None = Field(default=None, max_length=255)
 
 
-class CursamentoCreateSchema(CursamentoBaseSchema):
-    """Criação de CURSAMENTO."""
+class CursamentoCreateSchema(BaseModel):
+    """Criação de CURSAMENTO (média e situação são calculadas)."""
 
     siMatricula: int = Field(..., ge=1)
     idOfertaDisciplina: int = Field(..., ge=1)
+    faltas: int = Field(default=0, ge=0)
+    obs: str | None = Field(default=None, max_length=255)
 
 
 class CursamentoUpdateSchema(BaseModel):
-    """Atualização parcial."""
+    """Atualização parcial (a procedure recalcula situação se as faltas mudarem)."""
 
-    mediaFinal: Decimal | None = Field(default=None, ge=0, le=10)
     faltas: int | None = Field(default=None, ge=0)
     situacaoFinal: str | None = Field(default=None, min_length=1, max_length=20)
     obs: str | None = Field(default=None, max_length=255)

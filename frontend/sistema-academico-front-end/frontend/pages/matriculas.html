@@ -78,7 +78,7 @@
           </div>
           <div class="table-wrapper">
             <table class="data-table">
-              <thead><tr><th>ID</th><th>Aluno</th><th>Turma</th><th>Data Matrícula</th><th>Status</th><th>Ações</th></tr></thead>
+              <thead><tr><th>ID</th><th>Aluno</th><th>Turma</th><th>Período</th><th>Data</th><th>Status</th><th>Acadêmico</th><th>Ações</th></tr></thead>
               <tbody id="table-body"></tbody>
             </table>
           </div>
@@ -95,12 +95,30 @@
         <div class="modal-body">
           <div class="form">
             <div class="form-row">
-              <div class="form-group"><label class="form-label" for="field-aluno_id">Aluno <span class="required">*</span></label><select class="form-select" id="field-aluno_id" required><option value="">Selecione...</option></select></div>
-              <div class="form-group"><label class="form-label" for="field-turma_id">Turma <span class="required">*</span></label><select class="form-select" id="field-turma_id" required><option value="">Selecione...</option></select></div>
+              <div class="form-group"><label class="form-label" for="field-pessoa_id">Aluno <span class="required">*</span></label><select class="form-input" id="field-pessoa_id" required><option value="">Carregando...</option></select></div>
+              <div class="form-group"><label class="form-label" for="field-idTurma">Turma <span class="required">*</span></label><select class="form-input" id="field-idTurma" required><option value="">Carregando...</option></select></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label class="form-label" for="field-data_matricula">Data da Matrícula</label><input type="date" class="form-input" id="field-data_matricula"></div>
-              <div class="form-group"><label class="form-label" for="field-status">Status</label><select class="form-select" id="field-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option><option value="pendente">Pendente</option></select></div>
+              <div class="form-group full-width"><label class="form-label" for="field-dataMatricula">Data da Matrícula <span class="required">*</span></label><input type="date" class="form-input" id="field-dataMatricula" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="field-anoLetivo">Ano Letivo <span class="required">*</span></label><input type="number" class="form-input" id="field-anoLetivo" required min="2000" placeholder="2026"></div>
+              <div class="form-group"><label class="form-label" for="field-semestre">Semestre <span class="required">*</span></label>
+                <select class="form-input" id="field-semestre" required>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group full-width"><label class="form-label" for="field-statusMatricula">Status <span class="required">*</span></label>
+                <select class="form-input" id="field-statusMatricula" required>
+                  <option value="ATIVA">ATIVA</option>
+                  <option value="TRANCADA">TRANCADA</option>
+                  <option value="CANCELADA">CANCELADA</option>
+                  <option value="FINALIZADA">FINALIZADA</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

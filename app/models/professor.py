@@ -23,7 +23,7 @@ class Professor(Base):
         autoincrement=False,
     )
     idProfessor: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
-    matriculaProf: Mapped[str] = mapped_column(String(20), nullable=False)
+    matriculaProf: Mapped[str | None] = mapped_column(String(20), nullable=True)
     prof_Formacao: Mapped[str] = mapped_column(String(100), nullable=False)
     dataAdmissao: Mapped[date] = mapped_column(Date, nullable=False)
 

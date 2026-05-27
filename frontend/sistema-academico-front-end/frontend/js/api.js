@@ -2,7 +2,10 @@
 /* API.JS - Funções centralizadas para consumo da API */
 /* ================================================== */
 
-const API_BASE_URL = 'http://192.168.15.40:8001/api/v1';
+// Base do backend FastAPI (com prefixo /api/v1 definido em settings).
+// Para apontar para outro host, sobrescreva via window.API_BASE_URL antes
+// de carregar este arquivo.
+const API_BASE_URL = window.API_BASE_URL || 'http://localhost:8000/api/v1';
 
 /**
  * Obtém o token de autenticação do localStorage
