@@ -14,9 +14,7 @@ class TurmaBaseSchema(BaseModel):
 
 
 class TurmaCreateSchema(TurmaBaseSchema):
-    """Criação de turma."""
-
-    idTurma: int = Field(..., ge=1)
+    """Criação de turma. idTurma é gerado pelo banco (IDENTITY)."""
 
 
 class TurmaUpdateSchema(BaseModel):

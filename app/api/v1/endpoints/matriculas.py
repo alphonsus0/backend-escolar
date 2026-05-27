@@ -80,3 +80,20 @@ def remover_matricula(
 ):
     service.remover(id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{id}/enturmar",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Enturmar aluno",
+    description=(
+        "Executa sp_EnturmarAluno: cria CURSAMENTOs para todas as "
+        "ofertas ATIVAs da turma/ano/semestre da matrícula."
+    ),
+)
+def enturmar_matricula(
+    id: MatriculaIdPath,
+    service: MatriculaServiceDep,
+):
+    service.enturmar(id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

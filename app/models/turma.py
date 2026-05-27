@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Turma(Base):
     __tablename__ = "TURMA"
 
-    idTurma: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    idTurma: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     nomeTurma: Mapped[str] = mapped_column(String(100), nullable=False)
     turno: Mapped[str] = mapped_column(String(20), nullable=False)
     serie: Mapped[str] = mapped_column(String(20), nullable=False)

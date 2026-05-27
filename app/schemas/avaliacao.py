@@ -17,10 +17,8 @@ class AvaliacaoBaseSchema(BaseModel):
 
 
 class AvaliacaoCreateSchema(AvaliacaoBaseSchema):
-    """Criação de avaliação."""
+    """Criação de avaliação. idAvaliacao é gerado pelo banco (IDENTITY)."""
 
-    idAvaliacao: int = Field(..., ge=1)
-    idNota: int = Field(..., ge=1)
     idOfertaDisciplina: int = Field(..., ge=1)
 
 
@@ -40,7 +38,6 @@ class AvaliacaoResponseSchema(AvaliacaoBaseSchema):
     """Resposta completa."""
 
     idAvaliacao: int
-    idNota: int
     idOfertaDisciplina: int
 
     model_config = ORM_MODEL_CONFIG

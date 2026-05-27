@@ -8,39 +8,43 @@ from app.schemas.pessoa import PessoaBaseSchema, PessoaResponseSchema
 
 
 class ProfessorBaseSchema(BaseModel):
-    """Dados específicos da tabela PROFESSOR."""
+    """Dados específicos da tabela PROFESSOR (resposta)."""
 
     idProfessor: int = Field(..., ge=1)
-    matriculaProf: str = Field(..., min_length=1, max_length=20)
+    matriculaProf: str | None = Field(default=None, max_length=20)
     prof_Formacao: str = Field(..., min_length=1, max_length=100)
     dataAdmissao: date
 
 
-class ProfessorCreateSchema(PessoaBaseSchema, ProfessorBaseSchema):
+class ProfessorCreateSchema(PessoaBaseSchema):
     """
-    Criação de professor: registros em PESSOA + PROFESSOR (mesmo pessoa_id).
+    Criação de professor: registros em PESSOA + PROFESSOR.
 
-    Não inclui campos de autenticação (senha, hash, token).
+    pessoa_id, idProfessor e matriculaProf são gerados pelo banco
+    (IDENTITY / SEQUENCE / trigger) — não devem ser informados.
     """
 
-    pessoa_id: int = Field(..., ge=1, description="Chave compartilhada PESSOA/PROFESSOR")
+    prof_Formacao: str = Field(..., min_length=1, max_length=100)
+    dataAdmissao: date
     senha: str = Field(..., min_length=6, max_length=100)
 
+
 class ProfessorUpdateSchema(BaseModel):
-    """Atualização parcial — PESSOA e/ou PROFESSOR."""
+    """Atualização parcial — PESSOA e/ou PROFESSOR.
+
+    idProfessor e matriculaProf são imutáveis (gerados pelo banco).
+    """
 
     nome: str | None = Field(default=None, min_length=1, max_length=100)
     cpf: str | None = Field(default=None, min_length=11, max_length=14)
     dataNascimento: date | None = None
     endereco: str | None = Field(default=None, min_length=1, max_length=255)
     telefone: str | None = Field(default=None, min_length=1, max_length=15)
-    idProfessor: int | None = Field(default=None, ge=1)
-    matriculaProf: str | None = Field(default=None, min_length=1, max_length=20)
     prof_Formacao: str | None = Field(default=None, min_length=1, max_length=100)
     dataAdmissao: date | None = None
 
     senha: str | None = Field(default=None, min_length=6, max_length=100)
-    
+
     model_config = ConfigDict(extra="forbid")
 
 

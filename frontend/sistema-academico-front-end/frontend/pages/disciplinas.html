@@ -80,7 +80,7 @@
           </div>
           <div class="table-wrapper">
             <table class="data-table">
-              <thead><tr><th>ID</th><th>Nome</th><th>Código</th><th>Carga Horária</th><th>Ações</th></tr></thead>
+              <thead><tr><th>idDisciplina</th><th>Nome</th><th>Carga Horária</th><th>Status</th><th>Ações</th></tr></thead>
               <tbody id="table-body"></tbody>
             </table>
           </div>
@@ -97,14 +97,18 @@
         <div class="modal-body">
           <div class="form">
             <div class="form-row">
-              <div class="form-group full-width"><label class="form-label" for="field-nome">Nome <span class="required">*</span></label><input type="text" class="form-input" id="field-nome" required placeholder="Nome da disciplina"></div>
+              <div class="form-group full-width"><label class="form-label" for="field-nomeDisciplina">Nome <span class="required">*</span></label><input type="text" class="form-input" id="field-nomeDisciplina" required placeholder="Nome da disciplina"></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label class="form-label" for="field-codigo">Código <span class="required">*</span></label><input type="text" class="form-input" id="field-codigo" required placeholder="Ex: MAT101"></div>
-              <div class="form-group"><label class="form-label" for="field-carga_horaria">Carga Horária</label><input type="number" class="form-input" id="field-carga_horaria" placeholder="Horas"></div>
+              <div class="form-group full-width"><label class="form-label" for="field-cargaHoraria">Carga Horária <span class="required">*</span></label><input type="number" class="form-input" id="field-cargaHoraria" required min="1" placeholder="Horas"></div>
             </div>
             <div class="form-row">
-              <div class="form-group full-width"><label class="form-label" for="field-descricao">Descrição</label><textarea class="form-textarea" id="field-descricao" rows="3" placeholder="Descrição da disciplina"></textarea></div>
+              <div class="form-group full-width"><label class="form-label" for="field-statusDisciplina">Status <span class="required">*</span></label>
+                <select class="form-input" id="field-statusDisciplina" required>
+                  <option value="ATIVA">ATIVA</option>
+                  <option value="INATIVA">INATIVA</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

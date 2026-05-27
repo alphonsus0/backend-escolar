@@ -12,9 +12,7 @@ class DisciplinaBaseSchema(BaseModel):
 
 
 class DisciplinaCreateSchema(DisciplinaBaseSchema):
-    """Criação de disciplina."""
-
-    idDisciplina: int = Field(..., ge=1)
+    """Criação de disciplina. idDisciplina é gerado pelo banco (IDENTITY)."""
 
 
 class DisciplinaUpdateSchema(BaseModel):

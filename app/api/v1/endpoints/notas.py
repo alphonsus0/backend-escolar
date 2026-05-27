@@ -36,7 +36,7 @@ def listar_notas(
     limit: int = Query(100, ge=1, le=500),
 ):
 
-    return service.listar(skip, limit)
+    return service.listar(skip=skip, limit=limit)
 
 
 @router.get(

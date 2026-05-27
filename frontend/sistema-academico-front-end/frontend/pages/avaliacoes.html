@@ -36,7 +36,7 @@
               <button class="btn btn-primary" id="btn-new"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nova Avaliação</button>
             </div>
           </div>
-          <div class="table-wrapper"><table class="data-table"><thead><tr><th>ID</th><th>Nome</th><th>Oferta</th><th>Data</th><th>Peso</th><th>Ações</th></tr></thead><tbody id="table-body"></tbody></table></div>
+          <div class="table-wrapper"><table class="data-table"><thead><tr><th>ID</th><th>Nome</th><th>Tipo</th><th>Data</th><th>Peso</th><th>Oferta</th><th>Ações</th></tr></thead><tbody id="table-body"></tbody></table></div>
           <div id="pagination-container"></div>
         </div>
       </div>
@@ -49,17 +49,27 @@
         <div class="modal-body">
           <div class="form">
             <div class="form-row">
-              <div class="form-group full-width"><label class="form-label">Nome <span class="required">*</span></label><input type="text" class="form-input" id="field-nome" required placeholder="Nome da avaliação"></div>
+              <div class="form-group full-width"><label class="form-label" for="field-idOfertaDisciplina">Oferta de Disciplina <span class="required">*</span></label><select class="form-input" id="field-idOfertaDisciplina" required><option value="">Carregando...</option></select></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label class="form-label">Oferta</label><select class="form-select" id="field-oferta_id"><option value="">Selecione...</option></select></div>
-              <div class="form-group"><label class="form-label">Data</label><input type="date" class="form-input" id="field-data"></div>
+              <div class="form-group full-width"><label class="form-label" for="field-nomeAvaliacao">Nome <span class="required">*</span></label><input type="text" class="form-input" id="field-nomeAvaliacao" required placeholder="Ex: Prova Bimestral"></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label class="form-label">Peso</label><input type="number" step="0.1" class="form-input" id="field-peso" placeholder="1.0"></div>
+              <div class="form-group"><label class="form-label" for="field-tipoAvaliacao">Tipo <span class="required">*</span></label>
+                <select class="form-input" id="field-tipoAvaliacao" required>
+                  <option value="PROVA">PROVA</option>
+                  <option value="TRABALHO">TRABALHO</option>
+                  <option value="SEMINARIO">SEMINÁRIO</option>
+                  <option value="EXERCICIO">EXERCÍCIO</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label" for="field-peso">Peso <span class="required">*</span> <small>(soma da oferta ≤ 10)</small></label><input type="number" step="0.1" min="0.1" max="10" class="form-input" id="field-peso" required placeholder="5.0"></div>
             </div>
             <div class="form-row">
-              <div class="form-group full-width"><label class="form-label">Descrição</label><textarea class="form-textarea" id="field-descricao" rows="2" placeholder="Descrição da avaliação"></textarea></div>
+              <div class="form-group full-width"><label class="form-label" for="field-dataAvaliacao">Data <span class="required">*</span></label><input type="date" class="form-input" id="field-dataAvaliacao" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group full-width"><label class="form-label" for="field-descAvaliacao">Descrição</label><textarea class="form-textarea" id="field-descAvaliacao" rows="2" maxlength="255" placeholder="Descrição opcional"></textarea></div>
             </div>
           </div>
         </div>

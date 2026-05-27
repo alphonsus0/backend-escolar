@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     notas,
     auth,
     health,
+    academico,
 )
 
 api_router = APIRouter()
@@ -28,3 +29,4 @@ api_router.include_router(ofertas.router)
 api_router.include_router(avaliacoes.router)
 api_router.include_router(cursamentos.router)
 api_router.include_router(notas.router)
+api_router.include_router(academico.router)

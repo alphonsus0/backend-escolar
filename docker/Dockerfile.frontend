@@ -1,0 +1,8 @@
+# Frontend estático servido por nginx
+FROM nginx:alpine
+
+# Serve a pasta interna `frontend/` (HTML/JS/CSS) na raiz.
+COPY frontend/sistema-academico-front-end/frontend/ /usr/share/nginx/html/frontend/
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80

@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKeyConstraint, Integer, Numeric
+from sqlalchemy import ForeignKey, ForeignKeyConstraint, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -25,10 +25,15 @@ class Nota(Base):
         ),
     )
 
-    idNota: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    idNota: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     nota: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     siMatricula: Mapped[int] = mapped_column(Integer, nullable=False)
     idOfertaDisciplina: Mapped[int] = mapped_column(Integer, nullable=False)
+    idAvaliacao: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("AVALIACAO.idAvaliacao"),
+        nullable=False,
+    )
 
     cursamento: Mapped[Cursamento] = relationship(
         back_populates="notas",
@@ -38,4 +43,4 @@ class Nota(Base):
         ),
         foreign_keys="[Nota.siMatricula, Nota.idOfertaDisciplina]",
     )
-    avaliacoes: Mapped[list[Avaliacao]] = relationship(back_populates="nota")
+    avaliacao: Mapped[Avaliacao] = relationship(back_populates="notas")

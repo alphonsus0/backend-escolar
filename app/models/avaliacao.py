@@ -17,24 +17,19 @@ if TYPE_CHECKING:
 class Avaliacao(Base):
     __tablename__ = "AVALIACAO"
 
-    idAvaliacao: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
-    peso: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False)
+    idAvaliacao: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    peso: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     nomeAvaliacao: Mapped[str] = mapped_column(String(100), nullable=False)
     dataAvaliacao: Mapped[date] = mapped_column(Date, nullable=False)
     tipoAvaliacao: Mapped[str] = mapped_column(String(50), nullable=False)
     descAvaliacao: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    idNota: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("NOTA.idNota"),
-        nullable=False,
-    )
     idOfertaDisciplina: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("OFERTADISCIPLINA.idOfertaDisciplina"),
         nullable=False,
     )
 
-    nota: Mapped[Nota] = relationship(back_populates="avaliacoes")
     oferta_disciplina: Mapped[OfertaDisciplina] = relationship(
         back_populates="avaliacoes",
     )
+    notas: Mapped[list[Nota]] = relationship(back_populates="avaliacao")

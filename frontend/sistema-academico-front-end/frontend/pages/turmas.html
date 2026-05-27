@@ -78,7 +78,7 @@
           </div>
           <div class="table-wrapper">
             <table class="data-table">
-              <thead><tr><th>ID</th><th>Nome</th><th>Código</th><th>Período</th><th>Ano</th><th>Ações</th></tr></thead>
+              <thead><tr><th>idTurma</th><th>Nome</th><th>Turno</th><th>Série</th><th>Sala</th><th>Ano Letivo</th><th>Ações</th></tr></thead>
               <tbody id="table-body"></tbody>
             </table>
           </div>
@@ -95,12 +95,22 @@
         <div class="modal-body">
           <div class="form">
             <div class="form-row">
-              <div class="form-group"><label class="form-label" for="field-nome">Nome <span class="required">*</span></label><input type="text" class="form-input" id="field-nome" required placeholder="Nome da turma"></div>
-              <div class="form-group"><label class="form-label" for="field-codigo">Código <span class="required">*</span></label><input type="text" class="form-input" id="field-codigo" required placeholder="Ex: T2024A"></div>
+              <div class="form-group full-width"><label class="form-label" for="field-nomeTurma">Nome <span class="required">*</span></label><input type="text" class="form-input" id="field-nomeTurma" required placeholder="Ex: 1º Ano A"></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label class="form-label" for="field-periodo">Período</label><input type="text" class="form-input" id="field-periodo" placeholder="Ex: Manhã, Tarde, Noite"></div>
-              <div class="form-group"><label class="form-label" for="field-ano">Ano</label><input type="number" class="form-input" id="field-ano" placeholder="2024"></div>
+              <div class="form-group"><label class="form-label" for="field-turno">Turno <span class="required">*</span></label>
+                <select class="form-input" id="field-turno" required>
+                  <option value="MATUTINO">MATUTINO</option>
+                  <option value="VESPERTINO">VESPERTINO</option>
+                  <option value="NOTURNO">NOTURNO</option>
+                  <option value="INTEGRAL">INTEGRAL</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label" for="field-serie">Série <span class="required">*</span></label><input type="text" class="form-input" id="field-serie" required placeholder="Ex: 1º Ano"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label" for="field-salasTurma">Sala <span class="required">*</span></label><input type="text" class="form-input" id="field-salasTurma" required placeholder="Ex: Sala 101"></div>
+              <div class="form-group"><label class="form-label" for="field-anoLetivo">Ano Letivo <span class="required">*</span></label><input type="number" class="form-input" id="field-anoLetivo" required min="2000" placeholder="2026"></div>
             </div>
           </div>
         </div>
